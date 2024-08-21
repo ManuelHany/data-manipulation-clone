@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+
+  news_db:
+    image: mongo:8.0.0-rc9-jammy
+    env_file:
+      - .env
+    ports:
+      - "27019:27017"
+    volumes:
+      - ./db_backup:/data/db
+    restart: always
+
+
+  news_api_app:
+    container_name: news_api_app
+    tty: true
+    stdin_open: true
+    depends_on:
+      - news_db
+    build: .
+    volumes:
+      - .:/app
+    command:
+      - sh
+      - -c
+      - |
+        if [ "$$FLASK_DEBUG" = "0" ]; then
+          gunicorn app:app --threads 4 --timeout 240 --bind 0.0.0.0:5000 --reload --workers 3 --chdir /app/
+        else
+          flask run --host=0.0.0.0 --port=5000
+        fi
+    restart: always
+    expose:
+      - 5000
+    ports:
+      - "${DOCKER_WEB_PORT}:5000"
+    env_file:
+      - .env
+
+  cache_redis:
+    image: redis:alpine3.19
+    restart: always
+    depends_on:
+      - news_db

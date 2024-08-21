@@ -1,0 +1,8 @@
+# .flake8 is the default name of flake8 configuration file.
+[flake8]
+exclude = 
+    migrations,
+    __pycache__,
+    manage.py,
+    settings.py,
+    notes.md

@@ -1,0 +1,18 @@
+# Allow to specify list of files 
+# to be exluded from the docker context
+
+# Git
+.git
+.gitignore
+
+# Docker
+.docker
+
+# Python
+app/__pychache__/
+app/*/__pychache__/
+app/*/*/__pychache__/
+app/*/*/*/__pychache__/
+.env/
+.venv/
+venv/
