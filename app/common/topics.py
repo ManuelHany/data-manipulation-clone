@@ -1,0 +1,10 @@
+AVAILABLE_TOPICS = [
+    "WORLD",
+    "NATION",
+    "BUSINESS",
+    "TECHNOLOGY",
+    "ENTERTAINMENT",
+    "SCIENCE",
+    "SPORTS",
+    "HEALTH",
+]

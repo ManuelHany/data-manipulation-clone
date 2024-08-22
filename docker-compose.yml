@@ -3,6 +3,7 @@ version: '3.9'
 services:
 
   mongo_db:
+    container_name: mongo_db
     image: mongo:8.0.0-rc9-jammy
     env_file:
       - .env
@@ -24,11 +25,8 @@ services:
     volumes:
       - ./app:/app
     command:
-#      - flask
-#      - run
-#      - --host=0.0.0.0
-#      - sh
-#      - -c
+      - sh
+      - -c
       - |
         if [ "$$FLASK_DEBUG" = "0" ]; then
           gunicorn app:app --threads 4 --timeout 240 --bind 0.0.0.0:5000 --reload --workers 3 --chdir /app/

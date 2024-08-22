@@ -11,4 +11,4 @@ client = MongoClient(
     authSource=os.environ.get("DATABASE_AUTH_SOURCE"),
 )
 
-db = client[os.getenv("MONGO_INITDB_DATABASE", "news")]
+db = client[os.getenv("MONGO_INITDB_DATABASE", "analysis_data")]

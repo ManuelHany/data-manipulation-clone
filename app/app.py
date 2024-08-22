@@ -5,34 +5,18 @@ from flask_smorest import Api
 from flask_jwt_extended import JWTManager
 
 
-from db import db
 from blocklist import BLOCKLIST
-import models
-
-from resources.item import blp as ItemBlueprint
-from resources.store import blp as StoreBlueprint
-from resources.tag import blp as TagBlueprint
+from models.user import UserDBManager, UserModel
 from resources.users import blp as UserBlueprint
 
-def create_app(db_url=None):
+
+def create_app():
     app = Flask(__name__)
-    app.config["PROPAGATE_EXCEPTIONS"] = True
-    app.config["API_TITLE"] = "Stores REST API"
-    app.config["API_VERSION"] = "v1"
-    app.config["OPENAPI_VERSION"] = "3.0.3"
-    app.config["OPENAPI_URL_PREFIX"] = "/"
-    app.config["OPENAPI_SWAGGER_UI_PATH"] = "/swagger-ui"
-    app.config[
-        "OPENAPI_SWAGGER_UI_URL"
-    ] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
-    app.config["SQLALCHEMY_DATABASE_URI"] = db_url or os.getenv("DATABASE_URL", "sqlite:///data.db")
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    db.init_app(app)
-
-    api = Api(app)
-
-    app.config["JWT_SECRET_KEY"] = "jose"
+    app.config.from_pyfile("config.py")
+    set_db_indexes(app)
+    UserModel.create_default_admin()
     jwt = JWTManager(app)
+
 
     @jwt.needs_fresh_token_loader
     def token_not_fresh_callback(jwt_header, jwt_payload):
@@ -84,14 +68,13 @@ def create_app(db_url=None):
             401,
         )
 
-    with app.app_context():
-        db.create_all()
-
-    api.register_blueprint(ItemBlueprint)
-    api.register_blueprint(StoreBlueprint)
-    api.register_blueprint(TagBlueprint)
+    api = Api(app)
     api.register_blueprint(UserBlueprint)
-
     return app
 
+def set_db_indexes(app):
+    with app.app_context():
+        UserDBManager.create_email_index()
 
+
+app = create_app()
