@@ -67,7 +67,6 @@ class UserRegister(MethodView):
                }, HTTP_201_CREATED
 
 
-
 @blp.route("/login")
 class UserLogin(MethodView):
     @blp.arguments(UserSchema)
@@ -82,21 +81,29 @@ class UserLogin(MethodView):
 
         abort(HTTP_401_UNAUTHORIZED, message="Invalid credentials.")
 
+@blp.route("/user")
+class User(MethodView):
+
+    @jwt_required()
+    @blp.arguments(GetUserByEmailSchema)
+    @blp.response(HTTP_200_OK, GetUserByEmailSchema)
+    def get(self, user_email):
+        user = UserModel.get_user_by_email(user_email['email'])
+        return user
+
 
 @blp.route("/user/<string:user_id>")
 class User(MethodView):
 
-    @blp.response(HTTP_200_OK, UserSchema)
+    @jwt_required()
+    @blp.response(HTTP_200_OK, GetUserByIdSchema)
     def get(self, user_id):
-        print(f'heeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeerrrrrrrrrrrrrrrrrrrrrrrr')
-        print(user_id)
         user = UserModel.get_user_by_id(user_id)
         return user
 
+    @jwt_required(fresh=True)
     def delete(self, user_id):
-        user = UserModel.query.get_or_404(user_id)
-        db.session.delete(user)
-        db.session.commit()
+        UserModel.delete_user(user_id)
         return {"message": "User deleted."}, HTTP_200_OK
 
 

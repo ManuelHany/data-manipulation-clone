@@ -12,13 +12,12 @@ from models.user import UserModel
 
 class UserSchema(Schema):
     email = fields.Email(required=True)
-    password = fields.Str(required=True)
+    password = fields.Str(required=True, load_only=True)
+    is_admin = fields.Bool()
+    created_at = fields.Date()
 
 
 class CreateUserSchema(UserSchema):
-    email = fields.Email(required=True)
-    password = fields.Str(required=True)
-
 
     @validates("email")
     def validate_email(self, email):
@@ -31,9 +30,9 @@ class CreateUserSchema(UserSchema):
             raise ValidationError("Password must be at least 8 characters long.")
 
 
-
-class GetUserByEmailSchema(Schema):
-    email = fields.Email(required=True)
+class GetUserByEmailSchema(UserSchema):
+    _id = ObjectIdField()
+    password = fields.Str(required=False, load_only=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -51,8 +50,9 @@ class GetUserByEmailSchema(Schema):
         return in_data
 
 
-class GetUserByIdSchema(Schema):
-    id = ObjectIdField(required=True)
+class GetUserByIdSchema(UserSchema):
+    _id = ObjectIdField(required=True)
+    password = fields.Str(load_only=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
