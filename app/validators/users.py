@@ -83,7 +83,6 @@ class UpdateUserSchema(CreateUserSchema):
             UserDBValidator.user_email_already_exists(data["email"])
 
 
-
 class UserDBValidator:
     @staticmethod
     def user_id_exists(user_id):

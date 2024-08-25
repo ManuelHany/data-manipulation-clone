@@ -8,7 +8,7 @@ from validators.users import (
     GetUserByEmailSchema,
     GetUserByIdSchema,
     UpdateUserSchema,
-    UserDBValidator,
+    UserDBValidator
 )
 
 from flask_jwt_extended import (
@@ -35,6 +35,7 @@ from common.http_status_codes import (
     HTTP_404_NOT_FOUND,
     HTTP_204_NO_CONTENT,
     HTTP_401_UNAUTHORIZED,
+    HTTP_403_FORBIDDEN
 )
 
 from models import UserModel
@@ -103,8 +104,17 @@ class User(MethodView):
 
     @jwt_required(fresh=True)
     def delete(self, user_id):
-        UserModel.delete_user(user_id)
-        return {"message": "User deleted."}, HTTP_200_OK
+        claims = get_jwt()
+        if claims['is_admin']:
+            user = UserModel.get_user_by_id(user_id)
+            if user:
+                UserModel.delete_user(user_id)
+                return {"message": "User deleted."}, HTTP_200_OK
+            else:
+                return {"message": "User With this id not exists."}
+        return {"message": "Action permitted for admins only."}, HTTP_403_FORBIDDEN
+
+
 
 
 @blp.route("/refresh")

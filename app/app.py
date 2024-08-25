@@ -32,9 +32,12 @@ def create_app():
 
     @jwt.additional_claims_loader
     def add_claims_to_jwt(identity):
-        if identity == 1:
-            return {"is_admin": True}
-        return {"is_admin": False}
+        try:
+            user = UserModel.get_user_by_id(identity)
+            return {"is_admin": user['is_admin']}
+        except:
+            return {"is_admin": False}
+
 
     @jwt.token_in_blocklist_loader
     def check_if_token_in_blocklist(jwt_header, jwt_payload):
