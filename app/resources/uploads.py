@@ -8,8 +8,12 @@ from flask_jwt_extended import (
     jwt_required,
 )
 
-# add swagger file import
-
+from swagger.uploads import (
+    refresh_token_failed_docs,
+    refresh_token_docs,
+    unauthorized_docs,
+    success_docs
+)
 from common.http_status_codes import (
     HTTP_201_CREATED,
     HTTP_200_OK,
@@ -20,12 +24,13 @@ from common.http_status_codes import (
     HTTP_403_FORBIDDEN
 )
 
-# import dataModel
+from models.uploads import UploadsDB
 blp = Blueprint('uploads', 'uploads', description="Operations on RGB images")
 
 
 @blp.route("/uploads")
 class Uploads(MethodView):
+    print("zangar")
 
     @jwt_required()
     def post(self, payload):
