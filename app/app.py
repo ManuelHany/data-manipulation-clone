@@ -38,7 +38,6 @@ def create_app():
         except:
             return {"is_admin": False}
 
-
     @jwt.token_in_blocklist_loader
     def check_if_token_in_blocklist(jwt_header, jwt_payload):
         return jwt_payload["jti"] in BLOCKLIST

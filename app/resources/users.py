@@ -18,7 +18,7 @@ from flask_jwt_extended import (
     get_jwt,
     jwt_required,
 )
-from swagger.admin import (
+from swagger.user import (
     success_docs,
     unauthorized_docs,
     invalid_token_docs,
