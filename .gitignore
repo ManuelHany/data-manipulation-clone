@@ -1,4 +1,6 @@
 # Byte-compiled / optimized / DLL files
+media
+media/
 db_backup
 db_backup/
 __pycache__/

@@ -15,7 +15,7 @@ services:
 
 
   data_manipulation_app:
-    container_name: data_manipulation_app
+    container_name: data-manipulation-app
     tty: true
     stdin_open: true
     depends_on:
@@ -24,7 +24,7 @@ services:
       context: .
     volumes:
       - ./app:/app
-#      - ./media:/app/media
+      - ./media:/media
     command:
       - sh
       - -c

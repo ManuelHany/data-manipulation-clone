@@ -3,7 +3,7 @@ from datetime import timedelta
 DEBUG = bool(int(os.getenv("FLASK_DEBUG", 0)))
 FLASK_APP = os.getenv("FLASK_APP", "app")
 PROPAGATE_EXCEPTIONS = True
-MEDIA =
+MEDIA = os.getenv("Media", "media")
 
 API_TITLE = "Data Manipulation REST API"
 API_VERSION = "v1"
