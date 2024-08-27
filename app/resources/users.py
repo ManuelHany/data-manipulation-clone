@@ -115,8 +115,6 @@ class User(MethodView):
         return {"message": "Action permitted for admins only."}, HTTP_403_FORBIDDEN
 
 
-
-
 @blp.route("/refresh")
 class TokenRefresh(MethodView):
     @jwt_required(refresh=True)

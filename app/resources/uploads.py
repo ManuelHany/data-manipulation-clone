@@ -1,6 +1,10 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
-from validators.uploads import UploadSchema
+
+import os
+from werkzeug.datastructures import FileStorage
+
+from validators.uploads import FileUploadSchema
 
 from flask_jwt_extended import (
     get_jwt_identity,
@@ -24,15 +28,18 @@ from common.http_status_codes import (
     HTTP_403_FORBIDDEN
 )
 
-from models.uploads import UploadsDB
+from models.files import FilesDB
 blp = Blueprint('uploads', 'uploads', description="Operations on RGB images")
 
 
 @blp.route("/uploads")
 class Uploads(MethodView):
-    print("zangar")
 
     @jwt_required()
-    def post(self, payload):
-        print("hereeeeeeeeeeeeeeeeeee")
-        return payload
+    @blp.arguments(FileUploadSchema)
+    def post(self, data):
+        for fileStorageObject in data['files']:
+            filename = fileStorageObject.filename
+            name, extension = os.path.splitext(filename)
+            print(f"File Name: {name}, Extension: {extension}")
+        return('zangar')

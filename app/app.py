@@ -8,6 +8,7 @@ from flask_jwt_extended import JWTManager
 from blocklist import BLOCKLIST
 from models.user import UserDBManager, UserModel
 from resources.users import blp as UserBlueprint
+from resources.uploads import blp as UploadsBlueprint
 
 
 def create_app():
@@ -72,6 +73,7 @@ def create_app():
 
     api = Api(app)
     api.register_blueprint(UserBlueprint)
+    api.register_blueprint(UploadsBlueprint)
     return app
 
 def set_db_indexes(app):

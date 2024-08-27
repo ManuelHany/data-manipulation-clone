@@ -24,6 +24,7 @@ services:
       context: .
     volumes:
       - ./app:/app
+#      - ./media:/app/media
     command:
       - sh
       - -c
