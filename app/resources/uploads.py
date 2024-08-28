@@ -18,6 +18,11 @@ from swagger.uploads import (
     unauthorized_docs,
     success_docs
 )
+from common.file_types import (
+    TEXTUAL_DATA_EXTENSIONS,
+    TABULAR_DATA_EXTENSIONS,
+    PICTURE_EXTENSIONS
+)
 from common.http_status_codes import (
     HTTP_201_CREATED,
     HTTP_200_OK,
@@ -27,6 +32,7 @@ from common.http_status_codes import (
     HTTP_401_UNAUTHORIZED,
     HTTP_403_FORBIDDEN
 )
+
 
 from models.files import FilesDB
 blp = Blueprint('uploads', 'uploads', description="Operations on RGB images")
@@ -41,5 +47,15 @@ class Uploads(MethodView):
         for fileStorageObject in data['files']:
             filename = fileStorageObject.filename
             name, extension = os.path.splitext(filename)
-            print(f"File Name: {name}, Extension: {extension}")
+            extension = extension.strip(".")
+            if extension in TABULAR_DATA_EXTENSIONS:
+                file_path = os.path.join(os.getenv('TABULAR_FILESTORAGE', '/media/tabular'), filename)
+            elif extension in TEXTUAL_DATA_EXTENSIONS:
+                file_path = os.path.join(os.getenv('RGB_FILESTORAGE', '/media/rgb'), filename)
+            elif extension in PICTURE_EXTENSIONS:
+                file_path = os.path.join(os.getenv('TEXTUAL_FILESTORAGE', '/media/textual'), filename)
+            else:
+                raise Exception ("file extension validator error.")
+            # fileStorageObject.save(file_path)
+            print(type(get_jwt_identity()))
         return('zangar')

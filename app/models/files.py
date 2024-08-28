@@ -11,9 +11,23 @@ class FilesDB:
     collection = db["files"]
 
 class FilesModel(FilesDB):
-    def users_count(cls):
-        return cls.collection.count_documents({"is_admin": False})
 
+    @classmethod
+    def files_count(cls):
+        return cls.collection.count_documents()
+
+    @classmethod
+    def rgb_count(cls):
+        return cls.collection.count_documents(file_type='rgb')
+
+    @classmethod
+    def textual_count(cls):
+        return cls.collection.count_documents(file_type='textual')
+
+    @classmethod
+    def tabular_count(cls):
+        return cls.collection.count_documents(file_type='tabular')
+################3
     @classmethod
     def users_list(cls):
         return cls.collection.find(

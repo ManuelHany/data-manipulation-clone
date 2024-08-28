@@ -31,5 +31,5 @@ RUN apk add --update --no-cache \
 
 ENV PATH="/py/bin:$PATH"
 
-USER flask-user
+#USER flask-user
 
