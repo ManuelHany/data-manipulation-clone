@@ -1,7 +1,6 @@
-from pymongo import ASCENDING, DESCENDING
+from pymongo import DESCENDING
 
 from db import db
-from passlib.hash import pbkdf2_sha256
 from datetime import datetime
 
 from utility import to_ObjectId
@@ -12,81 +11,96 @@ class FilesDB:
 
 class FilesModel(FilesDB):
 
-    @classmethod
-    def files_count(cls):
-        return cls.collection.count_documents()
+    def files_count(cls, file_type='', file_extension=''):
+        query = {}
+        if file_type:
+            query['file_type'] = file_type
+        if file_extension:
+            query['file_extension'] = file_extension
+        return cls.collection.count_documents(query)
 
     @classmethod
-    def rgb_count(cls):
-        return cls.collection.count_documents(file_type='rgb')
+    def files_list(cls, file_type='', file_extension=''):
+        query = {}
+        if file_type:
+            query['file_type'] = file_type
+        if file_extension:
+            query['file_extension'] = file_extension
+        return cls.collection.find(query).sort("created_at", DESCENDING)
 
     @classmethod
-    def textual_count(cls):
-        return cls.collection.count_documents(file_type='textual')
-
-    @classmethod
-    def tabular_count(cls):
-        return cls.collection.count_documents(file_type='tabular')
-################3
-    @classmethod
-    def users_list(cls):
-        return cls.collection.find(
-            {"is_admin": False}, {"password": 0, "is_admin": 0}
-        ).sort("created_at", DESCENDING)
-
-    @classmethod
-    def create_user(cls, email, password, code=None, is_admin=False, **extra_data):
-        """
-        Create a new user.
-        """
-        current_utc_time = datetime.utcnow()
-        user = {
-            "email": email,
-            "password": pbkdf2_sha256.hash(password),
-            "is_admin": is_admin,
-            **extra_data,
-            "created_at": current_utc_time,
-            "updated_at": current_utc_time,
+    def files_count_user(cls, user_id, file_type='', file_extension=''):
+        query = {
+            'user_id': user_id
         }
-        if code:
-            user.update({"code": code})
-        return cls.collection.insert_one(user)
+        if file_type:
+            query['file_type'] = file_type
+        if file_extension:
+            query['file_extension'] = file_extension
+        return cls.collection.count_documents(query)
 
     @classmethod
-    def create_default_admin(cls, email=None, password=None, **extra_data):
-        try:
-            cls.create_user(
-                email=email or "admin@admin.com",
-                password=password or "123456789",
-                is_admin=True,
-                **extra_data
-            )
-        except Exception as e:
-            print(e)
+    def files_list_user(cls, user_id, file_type='', file_extension=''):
+        query = {
+            'user_id': user_id
+        }
+        if file_type:
+            query['file_type'] = file_type
+        if file_extension:
+            query['file_extension'] = file_extension
+        return cls.collection.find(query).sort("created_at", DESCENDING)
 
     @classmethod
-    def update_user(cls, user_id, data: dict):
+    def create_files(cls, documents):
+        """
+        Create a new files.
+        """
         current_utc_time = datetime.utcnow()
-        if data.get("password"):
-            data["password"] = pbkdf2_sha256.hash(data["password"])
-        data["updated_at"] = current_utc_time
-        return cls.collection.find_one_and_update(
-            {"_id": to_ObjectId(user_id)}, {"$set": data}
-        )
+        documents = [{**item, "upload_date": current_utc_time} for item in documents]
+        return cls.collection.insert_many(documents)
 
     @classmethod
-    def delete_user(cls, user_id):
-        cls.collection.delete_one({"_id": to_ObjectId(user_id)})
+    def create_file(cls, user_id, file_type, file_extension, file_name, file_path):
+        """
+        Create a new file.
+        """
+        current_utc_time = datetime.utcnow()
+        file = {
+            "user_id": user_id,
+            "file_type": file_type,
+            "file_extension": file_extension,
+            "file_name": file_name,
+            "file_path": file_path,
+            "upload_date": current_utc_time
+        }
+        return cls.collection.insert_one(file)
 
     @classmethod
-    def get_user_by_email(cls, email):
-        return cls.collection.find_one({"email": email})
+    def delete_file(cls, file_id):
+        cls.collection.delete_one({"_id": to_ObjectId(file_id)})
 
     @classmethod
-    def get_user_by_id(cls, id):
+    def get_file_by_name(cls, user_id, file_name):
+        file = {
+            "user_id": user_id,
+            "file_name": file_name
+        }
+        return cls.collection.find_one(file)
+
+    @classmethod
+    def get_file_by_id(cls, user_id, id):
         if isinstance(id, str):
             id = to_ObjectId(id)
-        return cls.collection.find_one({"_id": id})
+        file = {
+            user_id: user_id,
+            "-id": id
+        }
+        return cls.collection.find_one({"_id": file})
 
 class FilesDBManager(FilesDB):
-    pass
+    @classmethod
+    def create_name_index(cls):
+        """
+        Create a unique index on the file_name field to ensure no duplicate emails.
+        """
+        cls.collection.create_index("file_name", unique=True)

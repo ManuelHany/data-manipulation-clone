@@ -34,7 +34,7 @@ from common.http_status_codes import (
 )
 
 
-from models.files import FilesDB
+from models import FilesModel
 blp = Blueprint('uploads', 'uploads', description="Operations on RGB images")
 
 
@@ -44,18 +44,30 @@ class Uploads(MethodView):
     @jwt_required()
     @blp.arguments(FileUploadSchema)
     def post(self, data):
+        files = []
         for fileStorageObject in data['files']:
             filename = fileStorageObject.filename
             name, extension = os.path.splitext(filename)
             extension = extension.strip(".")
+            file_type = ""
             if extension in TABULAR_DATA_EXTENSIONS:
+                file_type = "tabular"
                 file_path = os.path.join(os.getenv('TABULAR_FILESTORAGE', '/media/tabular'), filename)
             elif extension in TEXTUAL_DATA_EXTENSIONS:
+                file_type = "textual"
                 file_path = os.path.join(os.getenv('RGB_FILESTORAGE', '/media/rgb'), filename)
             elif extension in PICTURE_EXTENSIONS:
+                file_type = "rgb"
                 file_path = os.path.join(os.getenv('TEXTUAL_FILESTORAGE', '/media/textual'), filename)
             else:
                 raise Exception ("file extension validator error.")
-            # fileStorageObject.save(file_path)
-            print(type(get_jwt_identity()))
+            files.append({
+                "user_id": get_jwt_identity(),
+                "file_type": file_type,
+                "file_extension": extension,
+                "file_name": name,
+                "file_path": file_path,
+            })
+            fileStorageObject.save(file_path)
+        FilesModel.create_files(files)
         return('zangar')

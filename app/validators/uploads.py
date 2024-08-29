@@ -20,6 +20,7 @@ class FileSchema(Schema):
     file_type = fields.String(required=True)
     file_extension = fields.String(required=True)
     file_name = fields.String(required=True)
+    file_path = fields.String()
     upload_date = fields.Date()
 
 

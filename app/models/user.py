@@ -1,4 +1,6 @@
 from pymongo import ASCENDING, DESCENDING
+from pymongo.errors import DuplicateKeyError
+
 
 from db import db
 from passlib.hash import pbkdf2_sha256
@@ -50,6 +52,8 @@ class UserModel(UserDB):
                 is_admin=True,
                 **extra_data
             )
+        except DuplicateKeyError:
+            pass
         except Exception as e:
             print(e)
 
