@@ -80,7 +80,14 @@ class FilesModel(FilesDB):
         cls.collection.delete_one({"_id": to_ObjectId(file_id)})
 
     @classmethod
-    def get_file_by_name(cls, user_id, file_name):
+    def get_files_by_name(cls, file_name):
+        file = {
+            "file_name": file_name
+        }
+        return cls.collection.find_many(file)
+
+    @classmethod
+    def get_file_by_name_user(cls, user_id, file_name):
         file = {
             "user_id": user_id,
             "file_name": file_name
