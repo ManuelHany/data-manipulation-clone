@@ -18,7 +18,7 @@ from constants import (
 from models.files import FilesModel
 
 
-class HistogramGenerationSchema(Schema):
+class ImageSchema(Schema):
     image_name = fields.String(required=True)
 
     def __init__(self, *args, **kwargs):
@@ -44,7 +44,14 @@ class HistogramGenerationSchema(Schema):
         return data
 
 
-class MaskGenerationSchema(HistogramGenerationSchema):
+class FormatImageSchema(ImageSchema):
+    output_format = fields.Str(
+        required=True,
+        validate=validate.OneOf(PICTURE_EXTENSIONS)
+    )
+
+
+class MaskGenerationSchema(ImageSchema):
     mask_type = fields.Str(
         required=True,
         validate=validate.OneOf(["bitwise_and", "bitwise_or", "bitwise_xor", "bitwise_not"])

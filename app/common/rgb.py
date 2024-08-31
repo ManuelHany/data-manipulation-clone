@@ -10,16 +10,11 @@ import json
 def generate_color_histogram(image_path):
     # Load the image
     image = cv2.imread(image_path)
-    if image is None:
-        raise ValueError(f"Image at path '{image_path}' could not be loaded.")
-
     # Convert BGR to RGB
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
     # Calculate histograms for each color channel
     colors = ('r', 'g', 'b')
-    histograms = {}  # Dictionary to store histograms for each color channel
-
     plt.figure()
     plt.title('Color Histogram')
     plt.xlabel('Bins')
@@ -27,12 +22,16 @@ def generate_color_histogram(image_path):
 
     for i, color in enumerate(colors):
         hist = cv2.calcHist([image_rgb], [i], None, [256], [0, 256])
-        histograms[color] = hist  # Store histogram in dictionary
         plt.plot(hist, color=color)
         plt.xlim([0, 256])
 
-    return histograms
-#
+    # Save the plot to an in-memory buffer
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    plt.close()  # Close the figure to free up memory
+    buf.seek(0)  # Rewind the buffer to the beginning
+
+    return send_file(buf, mimetype='image/png', as_attachment=False, download_name='color_histogram.png')
 
 def generate_segmentation_mask(image_path, lower_bound, upper_bound, mask_type):
 
@@ -68,24 +67,24 @@ def generate_segmentation_mask(image_path, lower_bound, upper_bound, mask_type):
 
     return send_file(io_buf, mimetype='image/png')
 
-# if __name__ == '__main__':
-#     # Path to your image
-#     image_path = 'path/to/your/image.jpg'
-#
-#     # Generate and return color histogram
-#     histograms = generate_color_histogram(image_path)
-#     print(histograms)  # Example of how to use the returned histogram data
-#
-#     # Set lower and upper bounds for color segmentation in HSV format
-#     lower_bound = np.array([30, 150, 50])  # Example: HSV lower bound for green
-#     upper_bound = np.array([85, 255, 255])  # Example: HSV upper bound for green
-#
-#     # Generate and return segmentation mask and result
-#     mask, result = generate_segmentation_mask(image_path, lower_bound, upper_bound)
-#     print(mask)  # Example of how to use the returned mask
-#     print(result)  # Example of how to use the returned result
+def resize(image_path, width, height):
+    """Resize the image to the specified width and height."""
+    image = cv2.imread(image_path)
+    resized_image = cv2.resize(image, (width, height))
+    return resized_image
 
+def crop(image_path, x, y, width, height):
+    """Crop the image to the specified rectangle."""
+    image = cv2.imread(image_path)
+    cropped_image = image[y:y + height, x:x + width]
+    return cropped_image
 
+def format_image(image_path, output_format):
+    """Convert the image to a different format."""
+    image = cv2.imread(image_path)
+    is_success, buffer = cv2.imencode(f'.{output_format}', image)
+    result = io.BytesIO(buffer)
+    return send_file(result, mimetype=f'image/{output_format}')
 
 
 def get_file_from_server(file_path, file_name, file_extension):
@@ -101,7 +100,6 @@ def get_file_from_server(file_path, file_name, file_extension):
 
     except FileNotFoundError:
         return {"message": "File not found on the server."}, 404
-
 
 def send_file_for_download(image_file_storage):
     # Example: returning it as a file download response in Flask
