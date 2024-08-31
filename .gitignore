@@ -167,3 +167,6 @@ cython_debug/
 
 # private notes
 notes.md
+
+# backups
+.bak

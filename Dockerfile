@@ -1,4 +1,4 @@
-FROM python:3.11-alpine3.17
+FROM python:3.8-bullseye
 LABEL maintainer="manuelhany"
 
 ENV PYTHONBUFFERED 1
@@ -9,27 +9,26 @@ COPY ./app /app
 WORKDIR /app
 
 
-RUN apk update
-
-RUN apk add --update --no-cache \
-    bash && \
-    apk add --update --no-cache --virtual .tmp-build-deps \
-    musl-dev \
-    python3-dev \
-    openssl-dev \
-    linux-headers && \
-    python -m venv /py && \
-    /py/bin/pip install --upgrade pip && \
-    /py/bin/pip install --no-cache-dir --upgrade -r /tmp/requirements.txt && \
+# Install necessary packages
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends\
+    bash \
+    build-essential \
+    libgl1-mesa-glx \
+    libssl-dev \
+    libffi-dev \
+    libpng-dev \
+    libjpeg-dev \
+    zlib1g-dev && \
+    python3 -m venv /py && \
+    /py/bin/pip3 install --upgrade pip && \
+    /py/bin/pip3 install --no-cache-dir --upgrade -r /tmp/requirements.txt && \
+    apt-get remove -y libpng-dev libssl-dev libjpeg-dev libffi-dev zlib1g-dev && \
+    apt-get autoremove -y && \
+    apt-get clean && \
     rm -rf /tmp && \
-    apk del .tmp-build-deps && \
-    adduser \
-        --disabled-password \
-        --no-create-home \
-        flask-user
-
+    adduser --disabled-password --no-create-home flask-user
 
 ENV PATH="/py/bin:$PATH"
 
 #USER flask-user
-

@@ -1,6 +1,6 @@
 # List of picture or image file extensions
 PICTURE_EXTENSIONS = [
-    "jpeg", "jpg", "png", "gif", "bmp",
+    "jpeg", "jpg", "png", "bmp",
     "tiff", "tif", "svg", "webp"
 ]
 

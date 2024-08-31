@@ -20,8 +20,10 @@ class FilesModel(FilesDB):
         return cls.collection.count_documents(query)
 
     @classmethod
-    def files_list(cls, file_type='', file_extension=''):
+    def files_list(cls, file_type='', file_extension='', file_name=''):
         query = {}
+        if file_name:
+            query['file_name'] = file_name
         if file_type:
             query['file_type'] = file_type
         if file_extension:
@@ -40,15 +42,23 @@ class FilesModel(FilesDB):
         return cls.collection.count_documents(query)
 
     @classmethod
-    def files_list_user(cls, user_id, file_type='', file_extension=''):
+    def files_list_user(cls, user_id, file_type='', file_extension='', file_name=''):
         query = {
             'user_id': user_id
         }
+        if file_name:
+            query['file_name'] = file_name
         if file_type:
             query['file_type'] = file_type
         if file_extension:
             query['file_extension'] = file_extension
-        return cls.collection.find(query).sort("created_at", DESCENDING)
+
+        # Projection to exclude _id and user_id
+        projection = {
+            '_id': 0,
+            'user_id': 0
+            }
+        return cls.collection.find(query, projection).sort("created_at", DESCENDING)
 
     @classmethod
     def create_files(cls, documents):
@@ -91,6 +101,15 @@ class FilesModel(FilesDB):
         file = {
             "user_id": user_id,
             "file_name": file_name
+        }
+        return cls.collection.find_one(file)
+
+    @classmethod
+    def get_file_by_type_name_user(cls, user_id, file_name, file_type):
+        file = {
+            "user_id": user_id,
+            "file_name": file_name,
+            "file_type": file_type
         }
         return cls.collection.find_one(file)
 

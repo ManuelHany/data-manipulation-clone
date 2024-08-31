@@ -18,12 +18,10 @@ from common.file_types import (
 )
 
 class FileSchema(Schema):
-    user_id = fields.String(required=True)
-    file_type = fields.String(required=True)
-    file_extension = fields.String(required=True)
-    file_name = fields.String(required=True)
     file_path = fields.String()
-    upload_date = fields.Date()
+    file_type = fields.String()
+    file_extension = fields.String()
+    file_name = fields.String()
 
 
 
