@@ -1,5 +1,3 @@
-import os
-
 from flask import Flask, jsonify
 from flask_smorest import Api
 from flask_jwt_extended import JWTManager
@@ -19,7 +17,6 @@ def create_app():
     UserModel.create_default_admin()
     jwt = JWTManager(app)
 
-
     @jwt.needs_fresh_token_loader
     def token_not_fresh_callback(jwt_header, jwt_payload):
         return (
@@ -36,9 +33,13 @@ def create_app():
     def add_claims_to_jwt(identity):
         try:
             user = UserModel.get_user_by_id(identity)
-            return {"is_admin": user['is_admin']}
-        except:
-            return {"is_admin": False}
+            return {"is_admin": user["is_admin"]}
+        except Exception as e:
+
+            return {
+                "is_admin": False,
+                "exception": e
+            }
 
     @jwt.token_in_blocklist_loader
     def check_if_token_in_blocklist(jwt_header, jwt_payload):
@@ -47,7 +48,12 @@ def create_app():
     @jwt.expired_token_loader
     def expired_token_callback(jwt_header, jwt_payload):
         return (
-            jsonify({"message": "The token has expired.", "error": "token_expired"}),
+            jsonify(
+                {
+                    "message": "The token has expired.",
+                    "error": "token_expired",
+                }
+            ),
             401,
         )
 
@@ -55,7 +61,10 @@ def create_app():
     def invalid_token_callback(error):
         return (
             jsonify(
-                {"message": "Signature verification failed.", "error": "invalid_token"}
+                {
+                    "message": "Signature verification failed.",
+                    "error": "invalid_token",
+                }
             ),
             401,
         )
@@ -77,6 +86,7 @@ def create_app():
     api.register_blueprint(UploadsBlueprint)
     api.register_blueprint(RgbBlueprint)
     return app
+
 
 def set_db_indexes(app):
     with app.app_context():

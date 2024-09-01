@@ -2,7 +2,7 @@ from common.http_status_codes import (
     HTTP_200_OK,
     HTTP_401_UNAUTHORIZED,
     HTTP_201_CREATED,
-    HTTP_403_FORBIDDEN
+    HTTP_403_FORBIDDEN,
 )
 
 
@@ -10,10 +10,10 @@ success_register_docs = {
     "status_code": HTTP_201_CREATED,
     "description": "user created successfully",
     "example": {
-                   "message": "User created successfully",
-                   "user_id": "<user_id>",
-                   "user_email": "<user_email>",
-               },
+        "message": "User created successfully",
+        "user_id": "<user_id>",
+        "user_email": "<user_email>",
+    },
 }
 
 
@@ -53,6 +53,7 @@ invalid_token_docs = {
         "message": "Signature verification failed.",
     },
 }
+
 missing_token_docs = {
     "status_code": HTTP_401_UNAUTHORIZED,
     "description": "missing token",
@@ -73,7 +74,10 @@ unauthorized_docs = {
 refresh_token_failed_docs = {
     "status_code": HTTP_401_UNAUTHORIZED,
     "description": "refresh token",
-    "example": {"error": "invalid_token", "message": "Signature verification failed."},
+    "example": {
+        "error": "invalid_token",
+        "message": "Signature verification failed.",
+    },
 }
 
 get_user_docs = {
@@ -84,6 +88,5 @@ get_user_docs = {
         "created_at": "Thu, 06 Jun 2024 13:21:53 GMT",
         "email": "admin@admin.com",
         "is_admin": True,
-        "updated_at": "Thu, 06 Jun 2024 13:21:53 GMT",
     },
 }

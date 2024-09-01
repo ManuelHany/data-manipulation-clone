@@ -1,4 +1,4 @@
-from pymongo import ASCENDING, DESCENDING
+from pymongo import DESCENDING
 from pymongo.errors import DuplicateKeyError
 
 
@@ -26,7 +26,7 @@ class UserModel(UserDB):
         ).sort("created_at", DESCENDING)
 
     @classmethod
-    def create_user(cls, email, password, code=None, is_admin=False, **extra_data):
+    def create_user(cls, email, password, is_admin=False, **extra_data):
         """
         Create a new user.
         """
@@ -39,8 +39,6 @@ class UserModel(UserDB):
             "created_at": current_utc_time,
             "updated_at": current_utc_time,
         }
-        if code:
-            user.update({"code": code})
         return cls.collection.insert_one(user)
 
     @classmethod

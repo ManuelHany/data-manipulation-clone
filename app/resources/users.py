@@ -24,19 +24,21 @@ from swagger.user import (
     credentials_invalid_docs,
     refresh_token_docs,
     invalid_token_docs,
-    missing_token_docs
+    missing_token_docs,
 )
+from utility import json_serializer
 from common.http_status_codes import (
     HTTP_201_CREATED,
     HTTP_200_OK,
     HTTP_401_UNAUTHORIZED,
-    HTTP_403_FORBIDDEN
+    HTTP_403_FORBIDDEN,
 )
 
-from models import UserModel
+from models.user import UserModel
 from blocklist import BLOCKLIST
 
-blp = Blueprint('users', 'users', description="Operations on users")
+blp = Blueprint("users", "users", description="Operations on users")
+
 
 @blp.route("/logout")
 class UserLogout(MethodView):
@@ -58,12 +60,13 @@ class UserRegister(MethodView):
         if UserModel.get_user_by_email(user_data["email"]):
             abort(409, message="A user with this email already exists.")
 
-        created_id = UserModel.create_user(**user_data, is_admin=False).inserted_id
+        created_id = UserModel.create_user(
+            **user_data, is_admin=False).inserted_id
         return {
-                   "message": "User created successfully",
-                   "user_id": str(created_id),
-                   "user_email": user_data["email"],
-               }, HTTP_201_CREATED
+            "message": "User created successfully",
+            "user_id": str(created_id),
+            "user_email": user_data["email"],
+        }, HTTP_201_CREATED
 
 
 @blp.route("/login")
@@ -74,16 +77,20 @@ class UserLogin(MethodView):
     @blp.alt_response(**credentials_invalid_docs)
     def post(self, user_data):
         user = UserModel.get_user_by_email(user_data["email"])
-        if user and pbkdf2_sha256.verify(user_data["password"], user["password"]):
+        if user and \
+                pbkdf2_sha256.verify(user_data["password"], user["password"]):
             access_token = create_access_token(str(user["_id"]), fresh=True)
             refresh_token = create_refresh_token(str(user["_id"]))
-            return {"access_token": access_token, "refresh_token": refresh_token}, HTTP_200_OK
+            return {
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+            }, HTTP_200_OK
 
         abort(HTTP_401_UNAUTHORIZED, message="Invalid credentials.")
 
 
 @blp.route("/user")
-class User(MethodView):
+class UserEmail(MethodView):
 
     @jwt_required()
     @blp.arguments(GetUserByEmailSchema)
@@ -91,36 +98,50 @@ class User(MethodView):
     @blp.alt_response(**missing_token_docs)
     @blp.alt_response(**invalid_token_docs)
     @blp.alt_response(**unauthorized_docs)
-    def get(self, user_email):
-        user = UserModel.get_user_by_email(user_email['email'])
-        return user
+    def get(self, data):
+        user = data["user"]
+        return {
+            "_id": json_serializer(user["_id"]),
+            "created_at": json_serializer(user["created_at"]),
+            "email": user["email"],
+            "is_admin": user["is_admin"],
+        }, HTTP_200_OK
 
 
 @blp.route("/user/<string:user_id>")
-class User(MethodView):
+class UserID(MethodView):
     """Only Admins"""
 
     @jwt_required()
-    @blp.arguments(GetUserByIdSchema)
+    @blp.arguments(GetUserByIdSchema, location="view_args")
     @blp.response(**get_user_docs)
     @blp.alt_response(**missing_token_docs)
     @blp.alt_response(**invalid_token_docs)
     @blp.alt_response(**unauthorized_docs)
-    def get(self, user_id):
-        user = UserModel.get_user_by_id(user_id)
-        return user
+    def get(self, data, user_id):
+        print("here")
+        user = data["user"]
+        print(user)
+        return {
+            "_id": json_serializer(user["_id"]),
+            "created_at": json_serializer(user["created_at"]),
+            "email": user["email"],
+            "is_admin": user["is_admin"],
+        }, HTTP_200_OK
 
     @jwt_required(fresh=True)
     def delete(self, user_id):
         claims = get_jwt()
-        if claims['is_admin']:
+        if claims["is_admin"]:
             user = UserModel.get_user_by_id(user_id)
             if user:
                 UserModel.delete_user(user_id)
                 return {"message": "User deleted."}, HTTP_200_OK
             else:
                 return {"message": "User With this id not exists."}
-        return {"message": "Action permitted for admins only."}, HTTP_403_FORBIDDEN
+        return {
+                   "message": "Action permitted for admins only."
+               }, HTTP_403_FORBIDDEN
 
 
 @blp.route("/refresh")
@@ -132,7 +153,8 @@ class TokenRefresh(MethodView):
     def post(self):
         current_user = get_jwt_identity()
         new_token = create_access_token(identity=current_user, fresh=False)
-        # Make it clear that when to add the refresh token to the blocklist will depend on the app design
+        # Make it clear that when to add the refresh token
+        # to the blocklist will depend on the app design
         jti = get_jwt()["jti"]
         BLOCKLIST.add(jti)
         return {"access_token": new_token}, HTTP_200_OK

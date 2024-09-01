@@ -1,12 +1,16 @@
-from marshmallow import Schema, fields, validate, validates, ValidationError, post_load, pre_load
+from marshmallow import (
+    Schema,
+    fields,
+    validate,
+    validates,
+    ValidationError,
+    post_load,
+    pre_load,
+)
 from flask_jwt_extended import get_jwt_identity
 
 from common.rgb import get_width_height
-from common.file_types import (
-    PICTURE_EXTENSIONS,
-    TABULAR_DATA_EXTENSIONS,
-    TEXTUAL_DATA_EXTENSIONS
-)
+from common.file_types import PICTURE_EXTENSIONS
 
 from models.files import FilesModel
 
@@ -27,70 +31,69 @@ class ImageSchema(Schema):
     @validates("image_name")
     def validate_image_name(self, image_name):
         user_id = self.user_id
-        image_document = RgbDBValidator.validate_image_name(user_id, image_name)
-        self.image_path = image_document['file_path']
+        image_document = RgbDBValidator.validate_image_name(
+            user_id, image_name
+        )
+        self.image_path = image_document["file_path"]
 
     @post_load
     def include_additional_fields(self, data, **kwargs):
-        data['user_id'] = self.user_id
-        data['image_path'] = self.image_path
+        data["user_id"] = self.user_id
+        data["image_path"] = self.image_path
         return data
 
 
 class CropSchema(ImageSchema):
     x = fields.Integer(
-        required=True,
-        validate=validate.Range(min=0))
+        required=True, validate=validate.Range(min=0))
     y = fields.Integer(
-        required=True,
-        validate=validate.Range(min=0))
+        required=True, validate=validate.Range(min=0))
     width = fields.Integer(
-        required=True,
-        validate=validate.Range(min=0))
+        required=True, validate=validate.Range(min=0))
     height = fields.Integer(
-        required=True,
-        validate=validate.Range(min=0))
+        required=True, validate=validate.Range(min=0))
 
     @post_load
     def include_additional_fields(self, data, **kwargs):
-        data['user_id'] = self.user_id
-        data['image_path'] = self.image_path
-        x = data['x']
-        y = data['y']
-        width = data['width']
-        height = data['height']
-        RgbDBValidator.validate_image_dimensions(data['image_path'], [x,width], [y, height])
+        data["user_id"] = self.user_id
+        data["image_path"] = self.image_path
+        x = data["x"]
+        y = data["y"]
+        width = data["width"]
+        height = data["height"]
+        RgbDBValidator.validate_image_dimensions(
+            data["image_path"], [x, width], [y, height]
+        )
         return data
 
 
 class ResizeSchema(ImageSchema):
     width = fields.Integer(
         required=True,
-        validate=validate.Range(min=10, max=4096)
-    )
+        validate=validate.Range(min=10, max=4096))
     height = fields.Integer(
         required=True,
-        validate=validate.Range(min=10, max=4096)
-    )
+        validate=validate.Range(min=10, max=4096))
+
     @post_load()
     def validate_aspect_ratio(self, data, **kwargs):
-        width = data['width']
-        height = data['height']
+        width = data["width"]
+        height = data["height"]
         RgbDBValidator.validate_aspect_ratio(width, height)
         return data
 
 
 class FormatImageSchema(ImageSchema):
     output_format = fields.Str(
-        required=True,
-        validate=validate.OneOf(PICTURE_EXTENSIONS)
+        required=True, validate=validate.OneOf(PICTURE_EXTENSIONS)
     )
 
 
 class MaskGenerationSchema(ImageSchema):
     mask_type = fields.Str(
         required=True,
-        validate=validate.OneOf(["bitwise_and", "bitwise_or", "bitwise_xor", "bitwise_not"])
+        validate=validate.OneOf(
+            ["bitwise_and", "bitwise_or", "bitwise_xor", "bitwise_not"]),
     )
     hue_lower = fields.Integer(
         required=True,
@@ -114,18 +117,20 @@ class MaskGenerationSchema(ImageSchema):
     )
     value_upper = fields.Integer(
         required=True,
-        validate=validate.Range(min=0, max=255)
-    )
-
+        validate=validate.Range(min=0, max=255))
 
     @pre_load()
     def process_fields(self, data, **kwargs):
         self.user_id = get_jwt_identity()
         required_fields = [
-            'image_name',
-            'hue_lower', 'saturation_lower', 'value_lower',
-            'hue_upper', 'saturation_upper', 'value_upper',
-            'mask_type'
+            "image_name",
+            "hue_lower",
+            "saturation_lower",
+            "value_lower",
+            "hue_upper",
+            "saturation_upper",
+            "value_upper",
+            "mask_type",
         ]
 
         for field in required_fields:
@@ -139,9 +144,12 @@ class RgbDBValidator:
 
     @staticmethod
     def validate_image_name(user_id, image_name):
-        image_document = FilesModel.get_file_by_type_name_user(user_id, image_name, 'rgb')
+        image_document = FilesModel.get_file_by_type_name_user(
+            user_id, image_name, "rgb"
+        )
         if not image_document:
-            raise ValidationError(f"image {image_name} not found, please upload first!")
+            raise ValidationError(f"image {image_name} not "
+                                  f"found, please upload first!")
         return image_document
 
     @staticmethod
@@ -151,7 +159,7 @@ class RgbDBValidator:
         is_valid_aspect_ratio = False
         input_ratio = width / height
         for ratio in accepted_aspect_ratios:
-            if input_ratio == ratio[0]/ratio[1]:
+            if input_ratio == ratio[0] / ratio[1]:
                 is_valid_aspect_ratio = True
                 break
 
@@ -172,7 +180,5 @@ class RgbDBValidator:
             if height <= img_height:
                 continue
             else:
-                raise ValidationError("the height should be within image height")
-
-
-
+                raise ValidationError("the height should "
+                                      "be within image height")
