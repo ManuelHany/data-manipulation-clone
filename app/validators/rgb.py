@@ -3,7 +3,7 @@ import os
 from flask import request
 from flask_jwt_extended import get_jwt_identity
 
-from common.rgb import get_file_from_server
+from common.rgb import get_width_height
 from common.custom_fields import ObjectIdField
 from common.file_types import (
     PICTURE_EXTENSIONS,
@@ -41,6 +41,51 @@ class ImageSchema(Schema):
     def include_additional_fields(self, data, **kwargs):
         data['user_id'] = self.user_id
         data['image_path'] = self.image_path
+        return data
+
+
+class CropSchema(ImageSchema):
+    x = fields.Integer(
+        required=True,
+        validate=validate.Range(min=0))
+    y = fields.Integer(
+        required=True,
+        validate=validate.Range(min=0))
+    width = fields.Integer(
+        required=True,
+        validate=validate.Range(min=0))
+    height = fields.Integer(
+        required=True,
+        validate=validate.Range(min=0))
+
+    @post_load
+    def include_additional_fields(self, data, **kwargs):
+        data['user_id'] = self.user_id
+        data['image_path'] = self.image_path
+        x = data['x']
+        y = data['y']
+        width = data['width']
+        height = data['height']
+        RgbDBValidator.validate_image_dimensions(data['image_path'], [x,width], [y, height])
+        return data
+
+
+
+
+class ResizeSchema(ImageSchema):
+    width = fields.Integer(
+        required=True,
+        validate=validate.Range(min=10, max=4096)
+    )
+    height = fields.Integer(
+        required=True,
+        validate=validate.Range(min=10, max=4096)
+    )
+    @post_load()
+    def validate_aspect_ratio(self, data, **kwargs):
+        width = data['width']
+        height = data['height']
+        RgbDBValidator.validate_aspect_ratio(width, height)
         return data
 
 
@@ -107,4 +152,36 @@ class RgbDBValidator:
         if not image_document:
             raise ValidationError(f"image {image_name} not found, please upload first!")
         return image_document
+
+    @staticmethod
+    def validate_aspect_ratio(width, height):
+        accepted_aspect_ratios = [(4, 3), (16, 9), (1, 1)]
+
+        is_valid_aspect_ratio = False
+        input_ratio = width / height
+        for ratio in accepted_aspect_ratios:
+            if input_ratio == ratio[0]/ratio[1]:
+                is_valid_aspect_ratio = True
+                break
+
+        if not is_valid_aspect_ratio:
+            raise ValidationError("Invalid aspect ratio. ")
+
+    @staticmethod
+    def validate_image_dimensions(image_path, width_list, height_list):
+        img_width, img_height = get_width_height(image_path)
+
+        for width in width_list:
+            if width <= img_width:
+                continue
+            else:
+                raise ValidationError("the width should be within image width")
+
+        for height in height_list:
+            if height <= img_height:
+                continue
+            else:
+                raise ValidationError("the height should be within image height")
+
+
 

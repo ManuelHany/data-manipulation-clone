@@ -5,7 +5,13 @@ from flask_smorest import Blueprint, abort
 from marshmallow import ValidationError
 
 
-from validators.rgb import MaskGenerationSchema, ImageSchema, FormatImageSchema
+from validators.rgb import (
+    MaskGenerationSchema,
+    ImageSchema,
+    FormatImageSchema,
+    ResizeSchema,
+    CropSchema
+)
 
 from flask_jwt_extended import (
     get_jwt_identity,
@@ -27,7 +33,7 @@ from common.file_types import (
 from common.rgb import (
     generate_segmentation_mask,
     generate_color_histogram,
-    format_image,
+    format,
     crop,
     resize
 )
@@ -43,6 +49,8 @@ from common.http_status_codes import (
 
 
 from models import FilesModel
+
+
 blp = Blueprint('rgb', 'rgb', description="Operations on RGB images")
 
 
@@ -54,6 +62,33 @@ class Rgb(MethodView):
         file_type = 'rgb'
         return redirect(url_for('uploads.Uploads', file_type=file_type))
 
+
+@blp.route("/rgb/crop")
+class FormatImage(MethodView):
+
+    @jwt_required()
+    @blp.arguments(CropSchema, location='query')
+    def get(self, validated_data):
+        image_path = validated_data['image_path']
+        x = validated_data['x']
+        y = validated_data['y']
+        width = validated_data['width']
+        height = validated_data['height']
+        return crop(image_path, x, y, width, height)
+
+
+@blp.route("/rgb/resize")
+class FormatImage(MethodView):
+
+    @jwt_required()
+    @blp.arguments(ResizeSchema, location='query')
+    def get(self, validated_data):
+        image_path = validated_data['image_path']
+        width = validated_data['width']
+        height = validated_data['height']
+        return resize(image_path, width, height)
+
+
 @blp.route("/rgb/format")
 class FormatImage(MethodView):
 
@@ -62,8 +97,7 @@ class FormatImage(MethodView):
     def get(self, validated_data):
         image_path = validated_data['image_path']
         output_format = validated_data['output_format']
-        result = format_image(image_path, output_format)
-        return result
+        return format(image_path, output_format)
 
 
 @blp.route("/rgb/histogram-generation")

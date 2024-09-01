@@ -63,6 +63,7 @@ class Uploads(MethodView):
     def post(self, data):
         files = data['files']
         for file in files:
+            print(file)
             file['fileObject'].save(file['file_path'])
             del file['fileObject']
         FilesModel.create_files(files)

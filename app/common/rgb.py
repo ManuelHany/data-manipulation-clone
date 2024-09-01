@@ -71,20 +71,29 @@ def resize(image_path, width, height):
     """Resize the image to the specified width and height."""
     image = cv2.imread(image_path)
     resized_image = cv2.resize(image, (width, height))
-    return resized_image
+    is_success, buffer = cv2.imencode('.png', resized_image)
+    return send_file(io.BytesIO(buffer), mimetype='image/png')
 
 def crop(image_path, x, y, width, height):
     """Crop the image to the specified rectangle."""
     image = cv2.imread(image_path)
     cropped_image = image[y:y + height, x:x + width]
-    return cropped_image
+    is_success, buffer = cv2.imencode('.png', cropped_image)
+    return send_file(io.BytesIO(buffer), mimetype='image/png')
 
-def format_image(image_path, output_format):
+def format(image_path, output_format):
     """Convert the image to a different format."""
     image = cv2.imread(image_path)
     is_success, buffer = cv2.imencode(f'.{output_format}', image)
     result = io.BytesIO(buffer)
     return send_file(result, mimetype=f'image/{output_format}')
+
+def get_width_height(image_path):
+    image = cv2.imread(image_path)
+
+    height, width, channels = image.shape
+
+    return width, height
 
 
 def get_file_from_server(file_path, file_name, file_extension):

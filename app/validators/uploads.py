@@ -24,7 +24,6 @@ class FileSchema(Schema):
     file_name = fields.String()
 
 
-
 class FileUploadSchema(Schema):
     files = fields.List(fields.Raw(required=True), required=True)
 
@@ -78,9 +77,6 @@ class FileUploadSchema(Schema):
                 "file_path": file_path,
             })
         return {'files': validated_files}
-
-
-
 
 
 class FileDBValidator:
