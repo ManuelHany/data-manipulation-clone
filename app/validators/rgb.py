@@ -1,20 +1,13 @@
 from marshmallow import Schema, fields, validate, validates, ValidationError, post_load, pre_load
-import os
-from flask import request
 from flask_jwt_extended import get_jwt_identity
 
 from common.rgb import get_width_height
-from common.custom_fields import ObjectIdField
 from common.file_types import (
     PICTURE_EXTENSIONS,
     TABULAR_DATA_EXTENSIONS,
     TEXTUAL_DATA_EXTENSIONS
 )
-from constants import (
-    EMAIL_ALREADY_EXISTS_KEY,
-    USER_NOT_EXISTS_KEY,
-    CODE_ALREADY_EXISTS_KEY,
-)
+
 from models.files import FilesModel
 
 
@@ -68,8 +61,6 @@ class CropSchema(ImageSchema):
         height = data['height']
         RgbDBValidator.validate_image_dimensions(data['image_path'], [x,width], [y, height])
         return data
-
-
 
 
 class ResizeSchema(ImageSchema):

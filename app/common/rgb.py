@@ -95,26 +95,3 @@ def get_width_height(image_path):
 
     return width, height
 
-
-def get_file_from_server(file_path, file_name, file_extension):
-    try:
-        with open(file_path, 'rb') as file:
-            image_file_storage = FileStorage(
-                stream=file,
-                filename=file_name + '.' + file_extension,
-                content_type=f'image/{file_extension}'
-            )
-
-            return image_file_storage
-
-    except FileNotFoundError:
-        return {"message": "File not found on the server."}, 404
-
-def send_file_for_download(image_file_storage):
-    # Example: returning it as a file download response in Flask
-    return send_file(
-        image_file_storage.stream,
-        as_attachment=True,
-        download_name=image_file_storage.filename,
-        mimetype=image_file_storage.content_type
-    )

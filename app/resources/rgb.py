@@ -2,9 +2,6 @@ from flask import redirect, url_for, jsonify, send_file
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 
-from marshmallow import ValidationError
-
-
 from validators.rgb import (
     MaskGenerationSchema,
     ImageSchema,
@@ -14,22 +11,9 @@ from validators.rgb import (
 )
 
 from flask_jwt_extended import (
-    get_jwt_identity,
-    get_jwt,
     jwt_required,
 )
 
-from swagger.uploads import (
-    refresh_token_failed_docs,
-    refresh_token_docs,
-    unauthorized_docs,
-    success_docs
-)
-from common.file_types import (
-    TEXTUAL_DATA_EXTENSIONS,
-    TABULAR_DATA_EXTENSIONS,
-    PICTURE_EXTENSIONS
-)
 from common.rgb import (
     generate_segmentation_mask,
     generate_color_histogram,
@@ -37,18 +21,6 @@ from common.rgb import (
     crop,
     resize
 )
-from common.http_status_codes import (
-    HTTP_201_CREATED,
-    HTTP_200_OK,
-    HTTP_400_BAD_REQUEST,
-    HTTP_404_NOT_FOUND,
-    HTTP_204_NO_CONTENT,
-    HTTP_401_UNAUTHORIZED,
-    HTTP_403_FORBIDDEN
-)
-
-
-from models import FilesModel
 
 
 blp = Blueprint('rgb', 'rgb', description="Operations on RGB images")

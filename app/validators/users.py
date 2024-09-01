@@ -1,4 +1,4 @@
-from marshmallow import Schema, fields, validates, ValidationError, post_load
+from marshmallow import Schema, fields, validates, ValidationError, post_load, pre_load
 
 from common.custom_fields import ObjectIdField
 from constants import (
@@ -38,6 +38,13 @@ class GetUserByEmailSchema(UserSchema):
         super().__init__(*args, **kwargs)
         self.user = None
 
+    @pre_load()
+    def check_is_admin(self, data, **kwargs):
+        if data["is_admin"]:
+            return True
+        else:
+            raise ValidationError("you are not authorized to perform this action.")
+
     @validates("email")
     def validate_email(self, email):
         self.user = UserModel.get_user_by_email(email)
@@ -51,12 +58,20 @@ class GetUserByEmailSchema(UserSchema):
 
 
 class GetUserByIdSchema(UserSchema):
+    email = fields.Email(required=False)
     _id = ObjectIdField(required=True)
     password = fields.Str(load_only=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.user = None
+
+    @pre_load()
+    def check_is_admin(self, data, **kwargs):
+        if data["is_admin"]:
+            return True
+        else:
+            raise ValidationError("you are not authorized to perform this action.")
 
     @validates("id")
     def validate_id(self, id):

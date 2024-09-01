@@ -1,14 +1,11 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
 from passlib.hash import pbkdf2_sha256
-from marshmallow import ValidationError
 from validators.users import (
     UserSchema,
     CreateUserSchema,
     GetUserByEmailSchema,
     GetUserByIdSchema,
-    UpdateUserSchema,
-    UserDBValidator
 )
 
 from flask_jwt_extended import (
@@ -19,21 +16,19 @@ from flask_jwt_extended import (
     jwt_required,
 )
 from swagger.user import (
+    success_register_docs,
     success_docs,
-    unauthorized_docs,
-    invalid_token_docs,
-    missing_token_docs,
+    success_logout_docs,
     get_user_docs,
-    update_user_docs,
-    delete_user_docs,
-    user_list_sample,
+    unauthorized_docs,
+    credentials_invalid_docs,
+    refresh_token_docs,
+    invalid_token_docs,
+    missing_token_docs
 )
 from common.http_status_codes import (
     HTTP_201_CREATED,
     HTTP_200_OK,
-    HTTP_400_BAD_REQUEST,
-    HTTP_404_NOT_FOUND,
-    HTTP_204_NO_CONTENT,
     HTTP_401_UNAUTHORIZED,
     HTTP_403_FORBIDDEN
 )
@@ -45,7 +40,9 @@ blp = Blueprint('users', 'users', description="Operations on users")
 
 @blp.route("/logout")
 class UserLogout(MethodView):
+
     @jwt_required()
+    @blp.response(**success_logout_docs)
     def post(self):
         jti = get_jwt()["jti"]
         BLOCKLIST.add(jti)
@@ -54,8 +51,9 @@ class UserLogout(MethodView):
 
 @blp.route("/register")
 class UserRegister(MethodView):
+
     @blp.arguments(CreateUserSchema)
-    @blp.response(**success_docs)
+    @blp.response(**success_register_docs)
     def post(selfself, user_data):
         if UserModel.get_user_by_email(user_data["email"]):
             abort(409, message="A user with this email already exists.")
@@ -70,9 +68,10 @@ class UserRegister(MethodView):
 
 @blp.route("/login")
 class UserLogin(MethodView):
+
     @blp.arguments(UserSchema)
     @blp.response(**success_docs)
-    @blp.alt_response(**unauthorized_docs)
+    @blp.alt_response(**credentials_invalid_docs)
     def post(self, user_data):
         user = UserModel.get_user_by_email(user_data["email"])
         if user and pbkdf2_sha256.verify(user_data["password"], user["password"]):
@@ -82,12 +81,16 @@ class UserLogin(MethodView):
 
         abort(HTTP_401_UNAUTHORIZED, message="Invalid credentials.")
 
+
 @blp.route("/user")
 class User(MethodView):
 
     @jwt_required()
     @blp.arguments(GetUserByEmailSchema)
-    @blp.response(HTTP_200_OK, GetUserByEmailSchema)
+    @blp.response(**get_user_docs)
+    @blp.alt_response(**missing_token_docs)
+    @blp.alt_response(**invalid_token_docs)
+    @blp.alt_response(**unauthorized_docs)
     def get(self, user_email):
         user = UserModel.get_user_by_email(user_email['email'])
         return user
@@ -95,9 +98,14 @@ class User(MethodView):
 
 @blp.route("/user/<string:user_id>")
 class User(MethodView):
+    """Only Admins"""
 
     @jwt_required()
-    @blp.response(HTTP_200_OK, GetUserByIdSchema)
+    @blp.arguments(GetUserByIdSchema)
+    @blp.response(**get_user_docs)
+    @blp.alt_response(**missing_token_docs)
+    @blp.alt_response(**invalid_token_docs)
+    @blp.alt_response(**unauthorized_docs)
     def get(self, user_id):
         user = UserModel.get_user_by_id(user_id)
         return user
@@ -118,6 +126,9 @@ class User(MethodView):
 @blp.route("/refresh")
 class TokenRefresh(MethodView):
     @jwt_required(refresh=True)
+    @blp.response(**refresh_token_docs)
+    @blp.alt_response(**missing_token_docs)
+    @blp.alt_response(**invalid_token_docs)
     def post(self):
         current_user = get_jwt_identity()
         new_token = create_access_token(identity=current_user, fresh=False)

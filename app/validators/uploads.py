@@ -3,12 +3,7 @@ import os
 from flask import request
 from flask_jwt_extended import get_jwt_identity
 
-from common.custom_fields import ObjectIdField
-from constants import (
-    EMAIL_ALREADY_EXISTS_KEY,
-    USER_NOT_EXISTS_KEY,
-    CODE_ALREADY_EXISTS_KEY,
-)
+
 from models.files import FilesModel
 
 from common.file_types import (

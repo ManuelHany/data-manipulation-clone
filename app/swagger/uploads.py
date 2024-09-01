@@ -1,9 +1,36 @@
 from common.http_status_codes import HTTP_200_OK, HTTP_401_UNAUTHORIZED
 
+
+uploaded_successfully = {
+    "status_code": HTTP_200_OK,
+    "description": "Files uploaded successfully",
+    "example": {
+        "message": "Files uploaded successfully."
+    },
+}
+
+
+retrieved_successfully = {
+    "status_code": HTTP_200_OK,
+    "description": "Files Retrieved successfully",
+    "example": [{
+        "file_extension": "jpg",
+        "file_name": "andrey-stakhovskiy-VWLvZo8Gvcs-unsplash",
+        "file_path": "/absolute/path/to/media/media/rgb/andrey-stakhovskiy-VWLvZo8Gvcs-unsplash.jpg",
+        "file_type": "rgb",
+        "upload_date": "Sun, 01 Sep 2024 07:31:18 GMT"
+    },],
+}
+
+
+
+
 success_docs = {
     "status_code": HTTP_200_OK,
     "description": "user login in successfully",
-    "example": {"access": "<access_token>", "refresh": "<refresh_token>"},
+    "example": {
+        "message": "Files uploaded successfully."
+    },
 }
 
 unauthorized_docs = {

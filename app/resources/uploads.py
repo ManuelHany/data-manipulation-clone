@@ -1,39 +1,25 @@
 from flask.views import MethodView, request
 from flask_smorest import Blueprint, abort
-from flask import current_app
 
-import os
-from werkzeug.datastructures import FileStorage
 
 from validators.uploads import FileSchema, FileUploadSchema
 
 from flask_jwt_extended import (
     get_jwt_identity,
-    get_jwt,
     jwt_required,
 )
 
 from swagger.uploads import (
+    uploaded_successfully,
+    retrieved_successfully,
     refresh_token_failed_docs,
     refresh_token_docs,
     unauthorized_docs,
     success_docs
 )
-from common.file_types import (
-    TEXTUAL_DATA_EXTENSIONS,
-    TABULAR_DATA_EXTENSIONS,
-    PICTURE_EXTENSIONS
-)
+
 from common import file_uploads
-from common.http_status_codes import (
-    HTTP_201_CREATED,
-    HTTP_200_OK,
-    HTTP_400_BAD_REQUEST,
-    HTTP_404_NOT_FOUND,
-    HTTP_204_NO_CONTENT,
-    HTTP_401_UNAUTHORIZED,
-    HTTP_403_FORBIDDEN
-)
+from common.http_status_codes import HTTP_200_OK
 
 
 from models import FilesModel
@@ -44,7 +30,7 @@ blp = Blueprint('uploads', 'uploads', description="File Uploads")
 class Uploads(MethodView):
 
     @jwt_required()
-    @blp.response(HTTP_200_OK, FileSchema(many=True))
+    @blp.response(**retrieved_successfully)
     def get(self):
         user_id = get_jwt_identity()
         file_type = request.args.get('file_type', type=str)
@@ -60,6 +46,7 @@ class Uploads(MethodView):
 
     @jwt_required()
     @blp.arguments(FileUploadSchema)
+    @blp.response(**uploaded_successfully)
     def post(self, data):
         files = data['files']
         for file in files:
