@@ -9,6 +9,7 @@ from validators.rgb import (
     ResizeSchema,
     CropSchema,
 )
+from validators.uploads import FileSchema
 
 from flask_jwt_extended import (
     jwt_required,
@@ -22,7 +23,6 @@ from common.rgb import (
     resize,
 )
 
-
 blp = Blueprint("rgb", "rgb", description="Operations on RGB images")
 
 
@@ -30,9 +30,10 @@ blp = Blueprint("rgb", "rgb", description="Operations on RGB images")
 class Rgb(MethodView):
 
     @jwt_required()
-    def get(self):
-        file_type = "rgb"
-        return redirect(url_for("uploads.Uploads", file_type=file_type))
+    @blp.arguments(FileSchema, location="query")
+    def get(self, data):
+        data['file_type'] = "rgb"
+        return redirect(url_for("uploads.Uploads", **data))
 
 
 @blp.route("/rgb/crop")

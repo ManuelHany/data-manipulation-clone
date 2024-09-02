@@ -2,7 +2,7 @@ from flask.views import MethodView, request
 from flask_smorest import Blueprint
 
 
-from validators.uploads import FileUploadSchema
+from validators.uploads import FileSchema, FileUploadSchema
 
 from flask_jwt_extended import (
     get_jwt_identity,
@@ -27,12 +27,14 @@ blp = Blueprint("uploads", "uploads", description="File Uploads")
 class Uploads(MethodView):
 
     @jwt_required()
+    @blp.arguments(FileSchema, location="query")
     @blp.response(**retrieved_successfully)
-    def get(self):
+    def get(self, data):
+        print(data)
         user_id = get_jwt_identity()
-        file_type = request.args.get("file_type", type=str)
-        file_extension = request.args.get("file_extension", type=str)
-        file_name = request.args.get("file_name", type=str)
+        file_type = data.get("file_type", "")
+        file_extension = data.get("file_extension", "")
+        file_name = data.get("file_name", "")
         uploadedFiles = FilesModel.files_list_user(
             user_id, file_type, file_extension, file_name
         )
