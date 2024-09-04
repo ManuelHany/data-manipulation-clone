@@ -1,5 +1,6 @@
 import os
 from datetime import timedelta
+from pathlib import Path
 
 DEBUG = bool(int(os.getenv("FLASK_DEBUG", 0)))
 FLASK_APP = os.getenv("FLASK_APP", "app")
@@ -33,3 +34,5 @@ JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
 JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
 
 JSONIFY_PRETTYPRINT_REGULAR = True
+
+UPLOAD_FOLDER = "/app/media"

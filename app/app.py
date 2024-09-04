@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 from flask_smorest import Api
 from flask_jwt_extended import JWTManager
 
@@ -94,3 +94,17 @@ def set_db_indexes(app):
 
 
 app = create_app()
+
+
+@app.get('/media/<path:path>')
+def send_media(path):
+    """
+    Serve files from the media directory.
+
+    :param path: a path like "posts/<int:post_id>/<filename>"
+    :return: The file requested from the media directory
+    """
+    # Define the media directory
+    media_directory = "/app/media"
+    # Serve the file from the media directory
+    return send_from_directory(directory=media_directory, path=path, as_attachment=True)

@@ -79,6 +79,7 @@ class HistogramGeneration(MethodView):
     @jwt_required()
     @blp.arguments(ImageSchema, location="query")
     def get(self, validated_data):
+        print(validated_data)
         result = generate_color_histogram(validated_data["image_path"])
         return result
 

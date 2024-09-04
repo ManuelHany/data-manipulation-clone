@@ -40,53 +40,43 @@ class CreateUserSchema(UserSchema):
 class GetUserByEmailSchema(Schema):
     email = fields.Email(required=True)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.user = None
-        self.admin_id = None
-        self.admin_user = None
+    @pre_load()
+    def check_is_admin(self, data, **kwargs):
+        UserDBValidator.check_is_admin(get_jwt_identity())
+        return data
 
     @validates("email")
     def validate_email(self, email):
-        self.admin_id = get_jwt_identity()
-        self.admin_user = UserModel.get_user_by_id(self.admin_id)
-        if not self.admin_user["is_admin"]:
-            raise ValidationError("you are not authorized "
-                                  "to perform this action.")
-        self.user = UserModel.get_user_by_email(email)
-        if not self.user:
+        user = UserModel.get_user_by_email(email)
+        if not user:
             raise ValidationError("User With this email not exists.")
+        self.context['user'] = user
 
     @post_load
-    def add_user(self, in_data, **kwargs):
-        in_data["user"] = self.user
-        return in_data
+    def add_user(self, data, **kwargs):
+        data["user"] = self.context['user']
+        return data
 
 
 class GetUserByIdSchema(Schema):
     user_id = fields.Str(required=True)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.user = None
 
     @pre_load()
     def check_is_admin(self, data, **kwargs):
-        client_id = get_jwt_identity()
-        if not UserModel.get_user_by_id(client_id)["is_admin"]:
-            raise ValidationError("you are not authorized "
-                                  "to perform this action.")
+        UserDBValidator.check_is_admin(get_jwt_identity())
         return data
 
     @validates("user_id")
     def validate_id(self, user_id):
-        self.user = UserModel.get_user_by_id(user_id)
-        if not self.user:
+        user = UserModel.get_user_by_id(user_id)
+        if not user:
             raise ValidationError("User With this id not exists.")
+        self.context['user'] = user
 
     @post_load
     def add_user(self, data, **kwargs):
-        data["user"] = self.user
+        data["user"] = self.context['user']
         return data
 
 
@@ -119,3 +109,11 @@ class UserDBValidator:
             raise ValidationError(
                 {EMAIL_ALREADY_EXISTS_KEY: "Email already in use."}
             )
+
+    @staticmethod
+    def check_is_admin(client_id):
+        client_id = get_jwt_identity()
+        if not UserModel.get_user_by_id(client_id)["is_admin"]:
+            raise ValidationError("you are not authorized "
+                                  "to perform this action.")
+        return True

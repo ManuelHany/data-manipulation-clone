@@ -18,28 +18,24 @@ from models.files import FilesModel
 class ImageSchema(Schema):
     image_name = fields.String(required=True)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.user_id = None
-        self.image_path = None
 
     @pre_load()
     def process_fields(self, data, **kwargs):
-        self.user_id = get_jwt_identity()
+        self.context["user_id"] = get_jwt_identity()
         return data
 
     @validates("image_name")
     def validate_image_name(self, image_name):
-        user_id = self.user_id
+        user_id = self.context["user_id"]
         image_document = RgbDBValidator.validate_image_name(
             user_id, image_name
         )
-        self.image_path = image_document["file_path"]
+        self.context["image_path"] = image_document["file_path"]
 
     @post_load
     def include_additional_fields(self, data, **kwargs):
-        data["user_id"] = self.user_id
-        data["image_path"] = self.image_path
+        data["user_id"] = self.context["user_id"]
+        data["image_path"] = self.context["image_path"]
         return data
 
 
@@ -55,8 +51,8 @@ class CropSchema(ImageSchema):
 
     @post_load
     def include_additional_fields(self, data, **kwargs):
-        data["user_id"] = self.user_id
-        data["image_path"] = self.image_path
+        data["user_id"] = self.context["user_id"]
+        data["image_path"] = self.context["image_path"]
         x = data["x"]
         y = data["y"]
         width = data["width"]
