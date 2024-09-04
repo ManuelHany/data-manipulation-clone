@@ -24,6 +24,7 @@ services:
       context: .
     volumes:
       - ./app:/app
+      - ./media:/app/media
       - ".${TABULAR_FILESTORAGE}:${TABULAR_FILESTORAGE}"
       - ".${TEXTUAL_FILESTORAGE}:${TEXTUAL_FILESTORAGE}"
       - ".${RGB_FILESTORAGE}:${RGB_FILESTORAGE}"
